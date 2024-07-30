@@ -1,3 +1,4 @@
+// Member
 package gift.entity;
 
 import jakarta.persistence.Entity;
@@ -9,6 +10,9 @@ import java.util.List;
 public class Member extends BaseEntity {
     private String email;
     private String password;
+    private String kakaoId;
+    private String kakaoNickname;
+    private String kakaoToken;
 
     @OneToMany(mappedBy = "member")
     private List<Wish> wishes = new ArrayList<>();
@@ -18,6 +22,14 @@ public class Member extends BaseEntity {
     public Member(String email, String password) {
         this.email = email;
         this.password = password;
+    }
+
+    public Member(String email, String password, String kakaoId, String kakaoNickname, String kakaoToken) {
+        this.email = email;
+        this.password = password;
+        this.kakaoId = kakaoId;
+        this.kakaoNickname = kakaoNickname;
+        this.kakaoToken = kakaoToken;
     }
 
     public String getEmail() {
@@ -34,6 +46,30 @@ public class Member extends BaseEntity {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getKakaoId() {
+        return kakaoId;
+    }
+
+    public void setKakaoId(String kakaoId) {
+        this.kakaoId = kakaoId;
+    }
+
+    public String getKakaoNickname() {
+        return kakaoNickname;
+    }
+
+    public void setKakaoNickname(String kakaoNickname) {
+        this.kakaoNickname = kakaoNickname;
+    }
+
+    public String getKakaoToken() {
+        return kakaoToken;
+    }
+
+    public void setKakaoToken(String kakaoToken) {
+        this.kakaoToken = kakaoToken;
     }
 
     public List<Wish> getWishes() {
