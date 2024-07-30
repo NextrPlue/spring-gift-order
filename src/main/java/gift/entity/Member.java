@@ -1,4 +1,3 @@
-// Member
 package gift.entity;
 
 import jakarta.persistence.Entity;
@@ -8,10 +7,8 @@ import java.util.List;
 
 @Entity
 public class Member extends BaseEntity {
-    private String email;
-    private String password;
-    private String kakaoId;
-    private String kakaoNickname;
+    private Long kakaoId;
+    private String nickname;
     private String kakaoToken;
 
     @OneToMany(mappedBy = "member")
@@ -19,49 +16,26 @@ public class Member extends BaseEntity {
 
     public Member() {}
 
-    public Member(String email, String password) {
-        this.email = email;
-        this.password = password;
-    }
-
-    public Member(String email, String password, String kakaoId, String kakaoNickname, String kakaoToken) {
-        this.email = email;
-        this.password = password;
+    public Member(Long kakaoId, String nickname, String kakaoToken) {
         this.kakaoId = kakaoId;
-        this.kakaoNickname = kakaoNickname;
+        this.nickname = nickname;
         this.kakaoToken = kakaoToken;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getKakaoId() {
+    public Long getKakaoId() {
         return kakaoId;
     }
 
-    public void setKakaoId(String kakaoId) {
+    public void setKakaoId(Long kakaoId) {
         this.kakaoId = kakaoId;
     }
 
-    public String getKakaoNickname() {
-        return kakaoNickname;
+    public String getNickname() {
+        return nickname;
     }
 
-    public void setKakaoNickname(String kakaoNickname) {
-        this.kakaoNickname = kakaoNickname;
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 
     public String getKakaoToken() {
