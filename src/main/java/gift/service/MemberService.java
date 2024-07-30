@@ -1,5 +1,6 @@
 package gift.service;
 
+import gift.dto.MemberRequest;
 import gift.dto.MemberResponse;
 import gift.dto.WishResponse;
 import gift.entity.Member;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,6 +57,11 @@ public class MemberService {
         List<WishResponse> wishResponses = member.getWishes().stream()
                 .map(wish -> new WishResponse(wish.getId(), wish.getProduct().getId(), wish.getProduct().getName(), wish.getProductNumber()))
                 .collect(Collectors.toList());
-        return new MemberResponse(member.getId(), member.getNickname(), wishResponses);
+        return new MemberResponse(member.getId(), member.getKakaoId(), member.getNickname(), member.getKakaoToken(), wishResponses);
+    }
+
+    public void saveMember(MemberRequest memberRequest) {
+        Member member = new Member(memberRequest.kakaoId(), memberRequest.nickname(), memberRequest.kakaoToken());
+        memberRepository.save(member);
     }
 }
