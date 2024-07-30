@@ -1,3 +1,4 @@
+// MemberService
 package gift.service;
 
 import gift.dto.MemberRequest;
@@ -85,7 +86,7 @@ public class MemberService {
         if (optionalMember.isPresent()) {
             member = optionalMember.get();
         } else {
-            member = new Member(email, passwordEncoder.encode(UUID.randomUUID().toString()));
+            member = new Member(email, passwordEncoder.encode(UUID.randomUUID().toString()), kakaoId.toString(), nickname, accessToken);
             memberRepository.save(member);
         }
 
