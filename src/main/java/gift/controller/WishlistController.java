@@ -34,7 +34,13 @@ public class WishlistController {
 
     @PostMapping("/add")
     public ResponseEntity<?> addItem(@RequestHeader("Authorization") String token, @RequestBody Map<String, Object> requestBody) {
-        Claims claims = jwtUtil.extractClaims(token.replace("Bearer ", ""));
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        } else {
+            return ResponseEntity.status(401).body("Missing or invalid Authorization header");
+        }
+
+        Claims claims = jwtUtil.extractClaims(token);
         Long memberId = Long.parseLong(claims.getSubject());
 
         Long productId = Long.valueOf(requestBody.get("productId").toString());
@@ -55,14 +61,15 @@ public class WishlistController {
     }
 
     @GetMapping("/items")
-    public String getItems(HttpSession session,
+    public String getItems(@RequestHeader("Authorization") String token,
                            @RequestParam(defaultValue = "0") int page,
                            @RequestParam(defaultValue = "10") int size,
                            @RequestParam(defaultValue = "id") String sortBy,
                            @RequestParam(defaultValue = "asc") String direction,
                            Model model) {
-        String token = (String) session.getAttribute("token");
-        if (token == null) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        } else {
             return "redirect:/members/login";
         }
 
