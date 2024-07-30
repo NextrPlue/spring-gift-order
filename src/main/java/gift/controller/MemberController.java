@@ -1,18 +1,15 @@
 package gift.controller;
 
-import gift.dto.MemberRequest;
 import gift.dto.MemberResponse;
 import gift.service.MemberService;
 import gift.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
@@ -38,41 +35,17 @@ public class MemberController {
     public String loginForm(Model model) {
         model.addAttribute("kakaoJavaScriptKey", kakaoJavaScriptKey);
         model.addAttribute("redirectUri", redirectUri);
-        model.addAttribute("memberRequest", new MemberRequest("", ""));
         return "login";
     }
 
-    @PostMapping("/login")
-    public String login(@Valid @ModelAttribute MemberRequest memberRequest, BindingResult bindingResult, Model model, HttpSession session) {
-        if (bindingResult.hasErrors()) {
-            return "login";
-        }
+    @GetMapping("/oauth/kakao")
+    public String oauthKakao(@RequestParam("code") String code, HttpSession session, Model model) {
         try {
-            String token = memberService.authenticate(memberRequest);
+            String token = memberService.kakaoLogin(code);
             session.setAttribute("token", token);
             return "redirect:/wishes/items";
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             return "redirect:/members/login?error";
-        }
-    }
-
-    @GetMapping("/register")
-    public String registerForm(Model model) {
-        model.addAttribute("memberRequest", new MemberRequest("", ""));
-        return "register";
-    }
-
-    @PostMapping("/register")
-    public String register(@Valid @ModelAttribute MemberRequest memberRequest, BindingResult bindingResult, Model model) {
-        if (bindingResult.hasErrors()) {
-            return "register";
-        }
-        try {
-            String token = memberService.register(memberRequest);
-            return "redirect:/members/login?registerSuccess";
-        } catch (IllegalArgumentException e) {
-            bindingResult.reject("error.register", e.getMessage());
-            return "register";
         }
     }
 
@@ -91,16 +64,5 @@ public class MemberController {
     public ResponseEntity<MemberResponse> getMemberById(@PathVariable Long id) {
         MemberResponse memberResponse = memberService.findById(id);
         return ResponseEntity.ok(memberResponse);
-    }
-
-    @GetMapping("/oauth/kakao")
-    public String oauthKakao(@RequestParam("code") String code, HttpSession session, Model model) {
-        try {
-            String token = memberService.kakaoLogin(code);
-            session.setAttribute("token", token);
-            return "redirect:/wishes/items";
-        } catch (Exception e) {
-            return "redirect:/members/login?error";
-        }
     }
 }
