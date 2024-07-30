@@ -1,17 +1,13 @@
 package gift.service;
 
-import gift.dto.MemberResponse;
-import gift.dto.WishResponse;
 import gift.entity.Member;
 import gift.repository.MemberRepository;
 import gift.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class MemberService {
@@ -48,13 +44,5 @@ public class MemberService {
         }
 
         return jwtUtil.generateToken(member.getId(), member.getNickname(), "USER");
-    }
-
-    public MemberResponse findById(Long id) {
-        Member member = memberRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Member not found"));
-        List<WishResponse> wishResponses = member.getWishes().stream()
-                .map(wish -> new WishResponse(wish.getId(), wish.getProduct().getId(), wish.getProduct().getName(), wish.getProductNumber()))
-                .collect(Collectors.toList());
-        return new MemberResponse(member.getId(), member.getKakaoId(), member.getNickname(), member.getKakaoToken(), wishResponses);
     }
 }
