@@ -8,17 +8,14 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Controller
+@RestController
 @RequestMapping("/api/products")
 public class ProductController {
 
@@ -32,80 +29,79 @@ public class ProductController {
     }
 
     @GetMapping
-    public String getAllProducts(@RequestParam(defaultValue = "0") int page,
-                                 @RequestParam(defaultValue = "10") int size,
-                                 @RequestParam(defaultValue = "id") String sortBy,
-                                 @RequestParam(defaultValue = "asc") String direction,
-                                 Model model) {
-        Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Page<ProductResponse> productPage = productService.findAll(PageRequest.of(page, size, sort));
-        model.addAttribute("productPage", productPage);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("sortBy", sortBy);
-        model.addAttribute("direction", direction);
-        return "index";
+    public ResponseEntity<Map<String, Object>> getAllProducts(@RequestParam(defaultValue = "0") int page,
+                                                              @RequestParam(defaultValue = "20") int size,
+                                                              @RequestParam(required = false) Long category) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<ProductResponse> productPage;
+
+        if (category != null) {
+            productPage = productService.findAllByCategoryId(category, pageRequest);
+        } else {
+            productPage = productService.findAll(pageRequest);
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("total_page", productPage.getTotalPages());
+        data.put("content", productPage.getContent());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("data", data);
+
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}/edit")
-    public String getProduct(@PathVariable long id, Model model) {
+    private Map<String, Object> convertToDto(ProductResponse product) {
+        Map<String, Object> productDto = new HashMap<>();
+        productDto.put("id", product.getId());
+        productDto.put("name", product.getName());
+        productDto.put("price", product.getPrice());
+        productDto.put("image_url", product.getImageUrl());
+        productDto.put("category_id", product.getCategoryId());
+        return productDto;
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getProduct(@PathVariable long id) {
         ProductResponse product = productService.findById(id);
-        model.addAttribute("product", product);
-        model.addAttribute("productRequest", new ProductRequest(product.getName(), product.getPrice(), product.getImageUrl(), product.getCategoryId()));
-        model.addAttribute("categories", categoryService.findAll());
-        return "editForm";
+        Map<String, Object> productDto = convertToDto(product);
+        return ResponseEntity.ok(productDto);
     }
 
     @GetMapping("/new")
-    public String addProductForm(Model model) {
-        model.addAttribute("productRequest", new ProductRequest("", 0, "", 1L));
-        model.addAttribute("categories", categoryService.findAll());
-        return "addForm";
+    public ResponseEntity<ProductRequest> addProductForm() {
+        return ResponseEntity.ok(new ProductRequest("", 0, "", 1L));
     }
 
     @PostMapping
-    public String addProduct(@Valid @ModelAttribute ProductRequest productRequest, BindingResult bindingResult, Model model) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("categories", categoryService.findAll());
-            return "addForm";
-        }
+    public ResponseEntity<?> addProduct(@Valid @RequestBody ProductRequest productRequest) {
         try {
             productService.save(productRequest);
+            return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
-            bindingResult.addError(new FieldError("productRequest", "name", e.getMessage()));
-            model.addAttribute("categories", categoryService.findAll());
-            return "addForm";
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return "redirect:/api/products";
     }
 
-    @PostMapping("/{id}")
-    public String updateProduct(@PathVariable Long id, @Valid @ModelAttribute ProductRequest productRequest, BindingResult bindingResult, Model model) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("product", new ProductResponse(id, productRequest.name(), productRequest.price(), productRequest.imageUrl(), null, null));
-            model.addAttribute("categories", categoryService.findAll());
-            return "editForm";
-        }
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest productRequest) {
         try {
             productService.update(id, productRequest);
+            return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
-            bindingResult.addError(new FieldError("productRequest", "name", e.getMessage()));
-            model.addAttribute("product", new ProductResponse(id, productRequest.name(), productRequest.price(), productRequest.imageUrl(), null, null));
-            model.addAttribute("categories", categoryService.findAll());
-            return "editForm";
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return "redirect:/api/products";
     }
 
-    @PostMapping("/{id}/delete")
-    public String deleteProduct(@PathVariable Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         productService.delete(id);
-        return "redirect:/api/products";
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/delete-batch")
-    @ResponseBody
-    public String deleteBatch(@RequestBody Map<String, List<Long>> request) {
+    public ResponseEntity<?> deleteBatch(@RequestBody Map<String, List<Long>> request) {
         productService.deleteBatch(request.get("ids"));
-        return "Success";
+        return ResponseEntity.ok("Success");
     }
 }
