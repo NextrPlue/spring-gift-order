@@ -1,9 +1,7 @@
 package gift.service;
 
-import gift.dto.CategoryResponse;
 import gift.dto.ProductRequest;
 import gift.dto.ProductResponse;
-import gift.dto.WishResponse;
 import gift.entity.Category;
 import gift.entity.Product;
 import gift.repository.ProductRepository;
@@ -30,6 +28,10 @@ public class ProductService {
 
     public Page<ProductResponse> findAll(PageRequest pageRequest) {
         return productRepository.findAll(pageRequest).map(this::convertToResponse);
+    }
+
+    public Page<ProductResponse> findAllByCategoryId(Long categoryId, PageRequest pageRequest) {
+        return productRepository.findByCategoryId(categoryId, pageRequest).map(this::convertToResponse);
     }
 
     public ProductResponse findById(long id) {
@@ -60,19 +62,6 @@ public class ProductService {
     }
 
     private ProductResponse convertToResponse(Product product) {
-        Category category = product.getCategory();
-        CategoryResponse categoryResponse = new CategoryResponse(
-                category.getId(),
-                category.getName(),
-                category.getColor(),
-                category.getImageUrl(),
-                category.getDescription()
-        );
-
-        List<WishResponse> wishResponses = product.getWishes().stream()
-                .map(wish -> new WishResponse(wish.getId(), wish.getProduct().getId(), wish.getProduct().getName(), wish.getProductNumber()))
-                .collect(Collectors.toList());
-
-        return new ProductResponse(product.getId(), product.getName(), product.getPrice(), product.getImageUrl(), categoryResponse, wishResponses);
+        return new ProductResponse(product.getId(), product.getName(), product.getPrice(), product.getImageUrl(), product.getCategory().getId());
     }
 }
